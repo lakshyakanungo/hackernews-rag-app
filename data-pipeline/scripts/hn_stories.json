@@ -1,0 +1,142 @@
+[
+    {
+        "id": 44969622,
+        "title": "Show HN: I replaced vector databases with Git for AI memory (PoC)",
+        "url": "https://github.com/Growth-Kinetics/DiffMem"
+    },
+    {
+        "id": 44967469,
+        "title": "Code review can be better",
+        "url": "https://tigerbeetle.com/blog/2025-08-04-code-review-can-be-better/"
+    },
+    {
+        "id": 44969211,
+        "title": "Data, objects, and how we're railroaded into poor design (2018)",
+        "url": "https://www.tedinski.com/2018/01/23/data-objects-and-being-railroaded-into-misdesign.html"
+    },
+    {
+        "id": 44931371,
+        "title": "Epson MX-80 Fonts",
+        "url": "https://mw.rat.bz/MX-80/"
+    },
+    {
+        "id": 44939642,
+        "title": "Universal Tool Calling Protocol (UTCP)",
+        "url": "https://github.com/universal-tool-calling-protocol/python-utcp"
+    },
+    {
+        "id": 44962066,
+        "title": "Show HN: I was curious about spherical helix, ended up making this visualization",
+        "url": "https://visualrambling.space/moving-objects-in-3d/"
+    },
+    {
+        "id": 44969221,
+        "title": "Python f-string cheat sheets (2022)",
+        "url": "https://fstring.help/cheat/"
+    },
+    {
+        "id": 44967796,
+        "title": "A statistical analysis of Rotten Tomatoes",
+        "url": "https://www.statsignificant.com/p/is-rotten-tomatoes-still-reliable"
+    },
+    {
+        "id": 44933290,
+        "title": "SK hynix dethrones Samsung as world’s top DRAM maker",
+        "url": "https://koreajoongangdaily.joins.com/news/2025-08-15/business/tech/Thanks-Nvidia-SK-hynix-dethrones-Samsung-as-worlds-top-DRAM-maker-for-first-time-in-over-30-years/2376834"
+    },
+    {
+        "id": 44962529,
+        "title": "Why are anime catgirls blocking my access to the Linux kernel?",
+        "url": "https://lock.cmpxchg8b.com/anubis.html"
+    },
+    {
+        "id": 44931305,
+        "title": "Mirror Ball Emoji Proposal (2018) [pdf]",
+        "url": "https://www.unicode.org/L2/L2019/19310-mirror-ball-emoji.pdf"
+    },
+    {
+        "id": 44962059,
+        "title": "Gemma 3 270M re-implemented in pure PyTorch for local tinkering",
+        "url": "https://github.com/rasbt/LLMs-from-scratch/tree/main/ch05/12_gemma3"
+    },
+    {
+        "id": 44968883,
+        "title": "The Pleasure of Patterns in Art",
+        "url": "https://thereader.mitpress.mit.edu/why-repetition-in-art-pleases-the-brain/"
+    },
+    {
+        "id": 44962771,
+        "title": "Home Depot sued for 'secretly' using facial recognition at self-checkouts",
+        "url": "https://petapixel.com/2025/08/20/home-depot-sued-for-secretly-using-facial-recognition-technology-on-self-checkout-cameras/"
+    },
+    {
+        "id": 44938499,
+        "title": "The Illumos Cafe: Another Cozy Corner for OS Diversity",
+        "url": "https://it-notes.dragas.net/2025/08/18/introducing-the-illumos-cafe/"
+    },
+    {
+        "id": 44967505,
+        "title": "SimpleIDE",
+        "url": "https://github.com/jamesplotts/simpleide"
+    },
+    {
+        "id": 44936535,
+        "title": "French firm Gouach is pitching an Infinite Battery with replaceable cells",
+        "url": "https://arstechnica.com/gadgets/2025/05/gouach-wants-you-to-insert-and-pluck-the-cells-from-its-infinite-e-bike-battery/"
+    },
+    {
+        "id": 44961172,
+        "title": "Sequoia backs Zed",
+        "url": "https://zed.dev/blog/sequoia-backs-zed"
+    },
+    {
+        "id": 44966170,
+        "title": "Show HN: PlutoPrint – Generate PDFs and PNGs from HTML with Python",
+        "url": "https://github.com/plutoprint/plutoprint"
+    },
+    {
+        "id": 44963135,
+        "title": "Show HN: Luminal – Open-source, search-based GPU compiler",
+        "url": "https://github.com/luminal-ai/luminal"
+    },
+    {
+        "id": 44963724,
+        "title": "An Update on Pytype",
+        "url": "https://github.com/google/pytype"
+    },
+    {
+        "id": 44964693,
+        "title": "Project to formalise a proof of Fermat’s Last Theorem in the Lean theorem prover",
+        "url": "https://imperialcollegelondon.github.io/FLT/"
+    },
+    {
+        "id": 44964916,
+        "title": "Zedless: Zed fork focused on privacy and being local-first",
+        "url": "https://github.com/zedless-editor/zed"
+    },
+    {
+        "id": 44965233,
+        "title": "Introduction to AT Protocol",
+        "url": "https://mackuba.eu/2025/08/20/introduction-to-atproto/"
+    },
+    {
+        "id": 44967923,
+        "title": "Advice for Tech Non-Profits",
+        "url": "https://mitchellh.com/writing/advice-for-tech-nonprofits"
+    },
+    {
+        "id": 44962969,
+        "title": "OPA maintainers and Styra employees hired by Apple",
+        "url": "https://blog.openpolicyagent.org/note-from-teemu-tim-and-torin-to-the-open-policy-agent-community-2dbbfe494371"
+    },
+    {
+        "id": 44960316,
+        "title": "Tidewave Web: in-browser coding agent for Rails and Phoenix",
+        "url": "https://tidewave.ai/blog/tidewave-web-phoenix-rails"
+    },
+    {
+        "id": 44963939,
+        "title": "Pixel 10 Phones",
+        "url": "https://blog.google/products/pixel/google-pixel-10-pro-xl/"
+    }
+]

@@ -1,0 +1,2 @@
+class ProcessedStory < ApplicationRecord
+end
