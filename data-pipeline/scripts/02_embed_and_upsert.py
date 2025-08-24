@@ -1,13 +1,15 @@
+# data-pipeline/scripts/02_embed_and_upsert.py
+
 import os
 import json
 import time
 import requests
 import psycopg2
+import random # Import the random module
 from bs4 import BeautifulSoup
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
-from requests_random_user_agent import USER_AGENT_LIST
 
 load_dotenv(dotenv_path='../.env')
 
@@ -18,6 +20,15 @@ EMBEDDING_MODEL = 'nomic-ai/nomic-embed-text-v1.5'
 MODEL_DIMENSION = 768
 INPUT_FILENAME = "hn_stories.json"
 PINECONE_UPSERT_BATCH_SIZE = 100
+
+# A small, hardcoded list of common user agents to rotate through
+USER_AGENT_LIST = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
+]
+
 
 # --- Database Connection ---
 def get_db_connection():
@@ -57,7 +68,7 @@ def initialize_pinecone():
     return index
 
 def initialize_embedding_model():
-    print("Loading embedding model: {EMBEDDING_MODEL}...")
+    print(f"Loading embedding model: {EMBEDDING_MODEL}...")
     model = SentenceTransformer(EMBEDDING_MODEL, trust_remote_code=True)
     print("Embedding model loaded.")
     return model
@@ -74,7 +85,7 @@ def load_stories():
 def scrape_article_text(url):
     try:
         # Use a random user-agent for each request to avoid being blocked
-        headers = {'User-Agent': USER_AGENT_LIST[0]} # Simple rotation
+        headers = {'User-Agent': random.choice(USER_AGENT_LIST)}
         response = requests.get(url, headers=headers, timeout=20)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
