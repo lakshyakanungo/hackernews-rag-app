@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_08_21_072100) do
+ActiveRecord::Schema[7.1].define(version: 2025_08_24_112446) do
   create_schema "auth"
   create_schema "extensions"
   create_schema "graphql"
@@ -28,6 +28,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_21_072100) do
   enable_extension "supabase_vault"
   enable_extension "uuid-ossp"
 
+  create_table "conversations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.text "content"
+    t.string "sender"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+  end
+
   create_table "processed_stories", force: :cascade do |t|
     t.integer "story_id"
     t.datetime "created_at", null: false
@@ -35,4 +49,5 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_21_072100) do
     t.index ["story_id"], name: "index_processed_stories_on_story_id", unique: true
   end
 
+  add_foreign_key "messages", "conversations"
 end
