@@ -1,5 +1,3 @@
-# data-pipeline/scripts/02_embed_and_upsert.py
-
 import os
 import json
 import time
@@ -9,6 +7,7 @@ from bs4 import BeautifulSoup
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
+from requests_random_user_agent import USER_AGENT_LIST
 
 load_dotenv(dotenv_path='../.env')
 
@@ -22,7 +21,6 @@ PINECONE_UPSERT_BATCH_SIZE = 100
 
 # --- Database Connection ---
 def get_db_connection():
-    """Establishes and returns a connection to the PostgreSQL database."""
     try:
         conn = psycopg2.connect(
             dbname=os.getenv("DB_NAME"),
@@ -37,7 +35,6 @@ def get_db_connection():
         return None
 
 def mark_story_as_processed_in_db(conn, story_id):
-    """Inserts a story_id into the processed_stories table."""
     try:
         with conn.cursor() as cur:
             cur.execute("INSERT INTO processed_stories (story_id, created_at, updated_at) VALUES (%s, NOW(), NOW()) ON CONFLICT (story_id) DO NOTHING", (story_id,))
@@ -48,28 +45,25 @@ def mark_story_as_processed_in_db(conn, story_id):
 
 # --- Service Initialization ---
 def initialize_pinecone():
-    """Initializes and returns a Pinecone client and index object."""
-    print("Initializing Pinecone...")
+    print("  -> Initializing Pinecone connection...")
     pc = Pinecone(api_key=PINECONE_API_KEY)
     if PINECONE_INDEX_NAME not in pc.list_indexes().names():
-        print(f"Creating new Pinecone index '{PINECONE_INDEX_NAME}'...")
+        print(f"  -> Creating new Pinecone index '{PINECONE_INDEX_NAME}'...")
         pc.create_index(name=PINECONE_INDEX_NAME, dimension=MODEL_DIMENSION, metric="cosine", spec=ServerlessSpec(cloud='aws', region='us-west-2'))
         while not pc.describe_index(PINECONE_INDEX_NAME).status['ready']: time.sleep(1)
     index = pc.Index(PINECONE_INDEX_NAME)
     time.sleep(1)
-    print("Pinecone initialized.")
+    print("  -> Pinecone initialized.")
     return index
 
 def initialize_embedding_model():
-    """Initializes and returns the sentence-transformer model."""
-    print(f"Loading embedding model: {EMBEDDING_MODEL}...")
+    print("Loading embedding model: {EMBEDDING_MODEL}...")
     model = SentenceTransformer(EMBEDDING_MODEL, trust_remote_code=True)
     print("Embedding model loaded.")
     return model
 
 # --- Data Processing ---
 def load_stories():
-    """Loads the story data from the JSON file."""
     try:
         with open(INPUT_FILENAME, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -78,10 +72,10 @@ def load_stories():
         return []
 
 def scrape_article_text(url):
-    """Scrapes the main textual content from a given article URL."""
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-        response = requests.get(url, headers=headers, timeout=15)
+        # Use a random user-agent for each request to avoid being blocked
+        headers = {'User-Agent': USER_AGENT_LIST[0]} # Simple rotation
+        response = requests.get(url, headers=headers, timeout=20)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
         main_content_tags = soup.find_all(['article', 'main', 'p'])
@@ -93,36 +87,29 @@ def scrape_article_text(url):
         return None
 
 def chunk_text(text, chunk_size=512, overlap=50):
-    """Splits a long text into smaller, overlapping chunks."""
     if not text: return []
     words = text.split()
     return [' '.join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size - overlap)]
 
-# --- Main Execution Logic (FIXED FOR TIMEOUT ERROR) ---
+# --- Main Execution Logic (RESTRUCTURED FOR RESILIENCE) ---
 def main():
-    """Main function to run the embedding and upserting pipeline."""
     stories = load_stories()
     if not stories:
         print("No new stories to process. Exiting.")
         return
 
-    # Initialize services that are safe to keep open
-    conn = get_db_connection()
-    if not conn: return
-
+    # Initialize the embedding model once, as it's a heavy object
     model = initialize_embedding_model()
 
-    # ** We will initialize Pinecone later, just before we need it **
-    pinecone_index = None
-
-    print("\n--- Starting to process and embed stories one by one ---")
     total_chunks_upserted = 0
+    print("\n--- Starting to process and embed stories one by one ---")
 
     for i, story in enumerate(stories):
         story_id, story_title, story_url = story['id'], story['title'], story['url']
         print(f"\n({i+1}/{len(stories)}) Processing: {story_title}")
         print(f"  -> URL: {story_url}")
 
+        # --- Step 1: Scrape and Embed a single article ---
         article_text = scrape_article_text(story_url)
         if not article_text:
             print("  -> Skipping due to scraping failure.")
@@ -145,26 +132,35 @@ def main():
             for j, chunk in enumerate(text_chunks)
         ]
 
+        # --- Step 2: Connect to services and perform operations for this article ---
         if vectors_to_upsert:
+            conn = None
+            pinecone_index = None
             try:
-                # ** Connect to Pinecone right before the upsert **
-                if pinecone_index is None:
-                    pinecone_index = initialize_pinecone()
+                # Connect to services "just-in-time"
+                conn = get_db_connection()
+                pinecone_index = initialize_pinecone()
 
-                print(f"  -> Upserting {len(vectors_to_upsert)} vectors to Pinecone...")
-                for i in range(0, len(vectors_to_upsert), PINECONE_UPSERT_BATCH_SIZE):
-                    batch = vectors_to_upsert[i:i + PINECONE_UPSERT_BATCH_SIZE]
-                    pinecone_index.upsert(vectors=batch)
+                if conn and pinecone_index:
+                    print(f"  -> Upserting {len(vectors_to_upsert)} vectors to Pinecone...")
+                    for i in range(0, len(vectors_to_upsert), PINECONE_UPSERT_BATCH_SIZE):
+                        batch = vectors_to_upsert[i:i + PINECONE_UPSERT_BATCH_SIZE]
+                        pinecone_index.upsert(vectors=batch)
 
-                total_chunks_upserted += len(vectors_to_upsert)
-                mark_story_as_processed_in_db(conn, story_id)
-                print(f"  -> Successfully marked story {story_id} as processed.")
+                    total_chunks_upserted += len(vectors_to_upsert)
+
+                    # Mark as processed only after successful upsert
+                    mark_story_as_processed_in_db(conn, story_id)
+                    print(f"  -> Successfully marked story {story_id} as processed.")
+
             except Exception as e:
-                print(f"  -> Error during Pinecone operation: {e}")
-                # Reset connection on failure so we can try again on the next article
-                pinecone_index = None
+                print(f"  -> An error occurred during DB or Pinecone operation: {e}")
+            finally:
+                # Ensure connections are closed at the end of the loop
+                if conn:
+                    conn.close()
+                print("  -> Connections for this article closed.")
 
-    conn.close()
     print(f"\n--- Pipeline Finished ---")
     print(f"Total new chunks upserted to Pinecone: {total_chunks_upserted}")
 
