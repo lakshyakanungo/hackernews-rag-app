@@ -5,42 +5,46 @@ require 'httparty'
 class LlmService
   include HTTParty
 
-  # --- Configuration for Local Ollama ---
   OLLAMA_API_URL = 'http://localhost:11434/api/generate'
-  # Use the local model you have downloaded (e.g., llama3)
   CHAT_MODEL = 'llama3.2'
 
-  def self.generate_answer(query, context)
+  def self.generate_answer(query, context, history)
     headers = { 'Content-Type' => 'application/json' }
 
-    # Construct a clear prompt for the LLM
+    # Build a formatted history string
+    formatted_history = history.map do |msg|
+      "#{msg.sender.capitalize}: #{msg.content}"
+    end.join("\n")
+
     prompt = <<-PROMPT
       You are an intelligent assistant for Hacker News.
       Answer the following question based *only* on the provided context.
       If the context does not contain the answer, say "I could not find an answer in the provided articles."
 
-      Context:
+      Here is the recent conversation history:
+      ---
+      #{formatted_history}
+      ---
+
+      Here is the relevant context from new articles:
       ---
       #{context.join("\n---\n")}
       ---
 
-      Question: #{query}
+      Latest Question: #{query}
 
       Answer:
     PROMPT
 
-    # Ollama's generate endpoint has a simpler body structure
     body = {
       model: CHAT_MODEL,
       prompt: prompt,
-      stream: false # We want the full response at once for v0
+      stream: false
     }.to_json
 
     begin
       response = HTTParty.post(OLLAMA_API_URL, headers: headers, body: body)
       if response.success?
-        # The response from Ollama is a stream of JSON objects, even with stream:false.
-        # We parse the full response body and then extract the 'response' key from the final JSON object.
         parsed_response = JSON.parse(response.body)
         parsed_response['response']
       else
