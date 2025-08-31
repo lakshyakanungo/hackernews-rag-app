@@ -3,6 +3,10 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
+  # Force production environment to use the ENV variable for the secret key base.
+  # This is essential for platforms like Render where credentials are set in the environment.
+  config.secret_key_base = ENV["RAILS_SECRET_KEY_BASE"]
+
   # Code is not reloaded between requests.
   config.cache_classes = true
 
