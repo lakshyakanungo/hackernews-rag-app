@@ -5,7 +5,7 @@ require 'httparty'
 class LlmService
   include HTTParty
 
-  OLLAMA_API_URL = 'http://localhost:11434/api/generate'
+  OLLAMA_API_URL = ENV['OLLAMA_API_URL']
   CHAT_MODEL = 'llama3.2'
 
   def self.generate_answer(query, context, history)
