@@ -50,7 +50,7 @@ function App() {
   const [conversationId, setConversationId] = useState(null);
 
   const messagesEndRef = useRef(null);
-  const API_URL = 'http://localhost:3000/api/v1/chat';
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1/chat";
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
