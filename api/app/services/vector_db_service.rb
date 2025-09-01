@@ -6,7 +6,7 @@ class VectorDbService
   include HTTParty
 
   # --- Configuration for Local Ollama ---
-  OLLAMA_API_URL = 'http://localhost:11434/api/embeddings'
+  OLLAMA_API_URL = ENV['OLLAMA_API_URL'] + '/embeddings'
   # This MUST match the model used in your Python script
   EMBEDDING_MODEL = 'nomic-embed-text'
 
