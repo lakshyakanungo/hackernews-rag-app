@@ -1,7 +1,9 @@
 # api/app/controllers/api/v1/chat_controller.rb
 
 class Api::V1::ChatController < ApplicationController
-  def create
+  include ActionController::Live
+
+  def stream
     query = params[:query]
     conversation_id = params[:conversation_id]
 
@@ -10,23 +12,29 @@ class Api::V1::ChatController < ApplicationController
       return
     end
 
-    # Find an existing conversation or create a new one
     conversation = conversation_id.present? ? Conversation.find_by(id: conversation_id) : Conversation.create
-
-    # Save the user's message
     conversation.messages.create(sender: 'user', content: query)
 
-    # Get the last 5 messages as history (to keep the prompt concise)
     history = conversation.messages.order(created_at: :desc).limit(5).reverse
-
-    # Perform the RAG logic
     context = VectorDbService.get_relevant_context(query)
-    answer = LlmService.generate_answer(query, context, history)
 
-    # Save the AI's response
-    conversation.messages.create(sender: 'ai', content: answer)
+    response.headers['Content-Type'] = 'text/event-stream'
+    ai_response = ""
 
-    # Send the answer and the conversation_id back to the frontend
-    render json: { answer: answer, conversation_id: conversation.id }
+    begin
+      LlmService.stream_answer(query, context, history) do |chunk|
+        ai_response << chunk
+        response.stream.write("data: #{chunk}\n\n")
+      end
+
+      # Save the AI's full response
+      conversation.messages.create(sender: 'ai', content: ai_response)
+
+      response.stream.write("data: #{ { done: true, conversation_id: conversation.id }.to_json }\n\n")
+    rescue => e
+      Rails.logger.error "Streaming error: #{e.message}"
+    ensure
+      response.stream.close
+    end
   end
 end

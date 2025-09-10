@@ -3,9 +3,7 @@ Rails.application.routes.draw do
   # This creates the URL: /api/v1/chat
   namespace :api do
     namespace :v1 do
-      # A POST request to /api/v1/chat will be handled by the 'create' action
-      # in the ChatController.
-      post 'chat', to: 'chat#create'
+      get "chat/stream", to: "chat#stream"
     end
   end
 end

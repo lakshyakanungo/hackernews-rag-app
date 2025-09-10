@@ -1,6 +1,7 @@
 # api/app/services/llm_service.rb
 
-require 'httparty'
+require 'net/http'
+require 'json'
 
 class LlmService
   include HTTParty
@@ -8,52 +9,52 @@ class LlmService
   OLLAMA_API_URL = ENV['OLLAMA_API_URL'] + '/generate'
   CHAT_MODEL = 'llama3.2'
 
-  def self.generate_answer(query, context, history)
-    headers = { 'Content-Type' => 'application/json' }
+  def self.stream_answer(query, context, history)
+    prompt = build_prompt(query, context, history)
 
-    # Build a formatted history string
-    formatted_history = history.map do |msg|
-      "#{msg.sender.capitalize}: #{msg.content}"
-    end.join("\n")
+    uri = URI(OLLAMA_API_URL)
+    request = Net::HTTP::Post.new(uri, { 'Content-Type' => 'application/json' })
+    request.body = {
+      model: CHAT_MODEL,
+      prompt: prompt,
+      stream: true
+    }.to_json
 
-    prompt = <<-PROMPT
+    Net::HTTP.start(uri.host, uri.port) do |http|
+      http.request(request) do |response|
+        response.read_body do |chunk|
+          Rails.logger.info "✅ #{chunk}"
+          begin
+            json = JSON.parse(chunk)
+            yield json["response"] if json["response"]
+            break if json["done"]
+          rescue JSON::ParserError
+            # skip incomplete JSON chunks
+          end
+        end
+      end
+    end
+  end
+
+  def self.build_prompt(query, context, history)
+    <<-PROMPT
       You are an intelligent assistant for Hacker News.
       Answer the following question based *only* on the provided context.
       If the context does not contain the answer, say "I could not find an answer in the provided articles."
-
-      Here is the recent conversation history:
-      ---
-      #{formatted_history}
-      ---
 
       Here is the relevant context from new articles:
       ---
       #{context.join("\n---\n")}
       ---
 
+      Here is the recent conversation history:
+      ---
+      #{history.map { |m| "#{m.sender}: #{m.content}" }.join("\n")}
+      ---
+
       Latest Question: #{query}
 
       Answer:
     PROMPT
-
-    body = {
-      model: CHAT_MODEL,
-      prompt: prompt,
-      stream: false
-    }.to_json
-
-    begin
-      response = HTTParty.post(OLLAMA_API_URL, headers: headers, body: body)
-      if response.success?
-        parsed_response = JSON.parse(response.body)
-        parsed_response['response']
-      else
-        puts "Error from Ollama LLM API: #{response.body}"
-        "Sorry, there was an error processing your request."
-      end
-    rescue => e
-      puts "Exception calling Ollama LLM API: #{e.message}"
-      "Sorry, there was an error connecting to the AI service."
-    end
   end
 end

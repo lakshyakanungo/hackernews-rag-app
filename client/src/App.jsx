@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 // --- Helper Components ---
-
 const SendIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
     <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor" />
@@ -39,18 +38,16 @@ const Message = ({ message }) => {
 };
 
 // --- Main App Component ---
-
 function App() {
   const [messages, setMessages] = useState([
     { sender: 'ai', text: 'Ask me anything about the latest Hacker News articles!' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // State to hold the current conversation ID
   const [conversationId, setConversationId] = useState(null);
 
   const messagesEndRef = useRef(null);
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1/chat";
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1/chat/stream";
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,39 +66,48 @@ function App() {
     setInput('');
     setIsLoading(true);
 
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Send the conversation_id if it exists
-        body: JSON.stringify({
-          query: input,
-          conversation_id: conversationId
-        }),
-      });
+    const url = `${API_URL}?query=${encodeURIComponent(input)}${conversationId ? `&conversation_id=${conversationId}` : ''}`;
+    const eventSource = new EventSource(url);
 
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+    let aiMessage = null;
+    let firstChunk = true;
+
+    eventSource.onmessage = (event) => {
+      console.log(event, "event");
+      try {
+        const data = JSON.parse(event.data);
+        if (data.done) {
+          if (data.conversation_id) setConversationId(data.conversation_id);
+          setIsLoading(false);
+          eventSource.close();
+        }
+      } catch {
+        // Partial text chunk
+        if (firstChunk) {
+          // Hide loader immediately
+          setIsLoading(false);
+          firstChunk = false;
+
+          // First chunk → create AI message
+          aiMessage = { sender: 'ai', text: event.data };
+          setMessages((prev) => [...prev, aiMessage]);
+        } else {
+          // Subsequent chunks → update AI message
+          aiMessage = { ...aiMessage, text: aiMessage.text + event.data };
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = aiMessage;
+            return updated;
+          });
+        }
       }
+    };
 
-      const data = await response.json();
-      const aiMessage = { sender: 'ai', text: data.answer || "Sorry, I couldn't get a response." };
-      setMessages((prev) => [...prev, aiMessage]);
-
-      // Save the conversation ID from the response for the next request
-      if (data.conversation_id) {
-        setConversationId(data.conversation_id);
-      }
-
-    } catch (error) {
-      console.error("Failed to fetch from API:", error);
-      const errorMessage = { sender: 'ai', text: `Sorry, something went wrong. ${error.message}` };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
+    eventSource.onerror = () => {
+      console.error("Stream error");
+      eventSource.close();
       setIsLoading(false);
-    }
+    };
   };
 
   return (
