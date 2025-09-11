@@ -106,6 +106,8 @@ function App() {
     eventSource.onerror = () => {
       console.error("Stream error");
       eventSource.close();
+      let aiMessage = { sender: 'ai', text: "There was an error getting the response." };
+      setMessages((prev) => [...prev, aiMessage]);
       setIsLoading(false);
     };
   };
