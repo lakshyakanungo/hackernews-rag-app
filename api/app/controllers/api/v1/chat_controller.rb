@@ -22,7 +22,7 @@ class Api::V1::ChatController < ApplicationController
     ai_response = ""
 
     begin
-      LlmService.stream_answer(query, context, history) do |chunk|
+      LlmService2.stream_answer(query, context, history) do |chunk|
         ai_response << chunk
         response.stream.write("data: #{chunk}\n\n")
       end
