@@ -23,8 +23,10 @@ class Api::V1::ChatController < ApplicationController
 
     begin
       LlmService2.stream_answer(query, context, history) do |chunk|
+        # Replace newlines with a unique token before sending
+        sanitized_chunk = chunk.gsub("\n", "[NL]")
         ai_response << chunk
-        response.stream.write("data: #{chunk}\n\n")
+        response.stream.write("data: #{sanitized_chunk}\n\n")
       end
 
       # Save the AI's full response

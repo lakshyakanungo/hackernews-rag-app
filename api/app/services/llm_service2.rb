@@ -21,7 +21,7 @@ class LlmService2
     client.stream_generate_content(
       { contents: { role: 'user', parts: { text: prompt } } }
     ) do |event, parsed, raw|
-      yield event["candidates"].first["content"]["parts"].first["text"]
+      yield event["candidates"]&.first["content"]["parts"]&.first["text"] || ""
     end
   end
 

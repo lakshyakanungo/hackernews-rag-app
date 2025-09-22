@@ -1,41 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-// --- Helper Components ---
-const SendIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
-    <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor" />
-  </svg>
-);
-
-const UserIcon = () => (
-  <div className="w-8 h-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center text-white font-bold">
-    You
-  </div>
-);
-
-const AiIcon = () => (
-  <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0 flex items-center justify-center">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor" />
-      <path d="M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z" fill="currentColor" />
-    </svg>
-  </div>
-);
-
-const Message = ({ message }) => {
-  const isUser = message.sender === 'user';
-  return (
-    <div className={`flex items-start gap-3 my-4 ${isUser ? 'justify-end' : ''}`}>
-      {!isUser && <AiIcon />}
-      <div className={`p-3 rounded-lg max-w-lg ${isUser ? 'bg-blue-500 text-white rounded-br-none' : 'bg-gray-200 text-gray-800 rounded-bl-none'}`}>
-        {message.text.split('\n').map((line, index) => (
-          <p key={index} className={line.trim() === '' ? 'h-4' : ''}>{line}</p>
-        ))}
-      </div>
-      {isUser && <UserIcon />}
-    </div>
-  );
-};
+import { Message } from './components/Message';
+import { SendIcon, AiIcon } from './icons.jsx';
 
 // --- Main App Component ---
 function App() {
@@ -89,11 +54,11 @@ function App() {
           firstChunk = false;
 
           // First chunk → create AI message
-          aiMessage = { sender: 'ai', text: event.data };
+          aiMessage = { sender: 'ai', text: event.data.replace(/\[NL]/g, '\n') };
           setMessages((prev) => [...prev, aiMessage]);
         } else {
           // Subsequent chunks → update AI message
-          aiMessage = { ...aiMessage, text: aiMessage.text + event.data };
+          aiMessage = { ...aiMessage, text: aiMessage.text + event.data.replace(/\[NL]/g, '\n') };
           setMessages((prev) => {
             const updated = [...prev];
             updated[updated.length - 1] = aiMessage;
