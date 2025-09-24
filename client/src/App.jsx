@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Message } from './components/Message';
 import { SendIcon, AiIcon } from './icons.jsx';
 
-// --- Main App Component ---
 function App() {
   const [messages, setMessages] = useState([
     { sender: 'ai', text: 'Ask me anything about the latest Hacker News articles!' }
@@ -12,7 +11,7 @@ function App() {
   const [conversationId, setConversationId] = useState(null);
 
   const messagesEndRef = useRef(null);
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1/chat/stream";
+  const API_URL = "http://localhost:3000/api/v1/chat/stream";
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -78,14 +77,15 @@ function App() {
   };
 
   return (
-    <div className="bg-gray-100 font-sans flex flex-col h-screen">
-      <header className="bg-orange-500 text-white p-4 text-center shadow-md">
-        <h1 className="text-2xl font-bold">HN RAG Chat</h1>
-        <p className="text-sm">Your AI assistant for Hacker News</p>
-      </header>
+    <div className="font-sans w-full h-screen bg-slate-50 flex justify-center p-4 md:p-6">
+      <div className="flex flex-col w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl h-full bg-white shadow-lg rounded-xl">
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-6">
-        <div className="max-w-4xl mx-auto">
+        <header className="bg-slate-100 border-b border-gray-200 text-gray-800 p-4 text-center rounded-t-xl">
+          <h1 className="text-2xl font-bold">HN RAG Chat</h1>
+          <p className="text-sm text-gray-500">Your AI assistant for Hacker News</p>
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {messages.map((msg, index) => (
             <Message key={index} message={msg} />
           ))}
@@ -98,32 +98,33 @@ function App() {
             </div>
           )}
           <div ref={messagesEndRef} />
-        </div>
-      </div>
+        </main>
 
-      <footer className="bg-white border-t border-gray-200 p-4">
-        <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSubmit} className="flex items-center gap-3">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask a question..."
-              className="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              className="bg-orange-500 p-3 rounded-full hover:bg-orange-600 disabled:bg-gray-400 transition-colors duration-200 flex items-center justify-center"
-              disabled={isLoading}
-            >
-              <SendIcon />
-            </button>
-          </form>
-        </div>
-      </footer>
+        <footer className="bg-white border-t border-gray-200 p-4 rounded-b-xl">
+          <div className="max-w-4xl mx-auto">
+            <form onSubmit={handleSubmit} className="flex items-center gap-3">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask a question..."
+                className="flex-1 p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                disabled={isLoading}
+              />
+              <button
+                type="submit"
+                className="bg-blue-500 p-3 rounded-full hover:bg-blue-600 disabled:bg-gray-400 transition-colors duration-200 flex items-center justify-center text-white"
+                disabled={isLoading}
+              >
+                <SendIcon />
+              </button>
+            </form>
+          </div>
+        </footer>
+      </div>
     </div>
   );
+
 }
 
 export default App;
