@@ -3,9 +3,14 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { UserIcon, AiIcon } from '../icons';
+import { LinkRenderer } from './LinkRenderer';
 
 export const Message = ({ message }) => {
   const isUser = message.sender === 'user';
+
+  const customComponents = {
+    a: LinkRenderer,
+  };
 
   return (
     <div className={`flex items-start gap-3 my-4 ${isUser ? 'justify-end' : ''}`}>
@@ -17,7 +22,10 @@ export const Message = ({ message }) => {
           ) : (
             // For AI messages, use ReactMarkdown to process potential formatting.
             <div className="prose prose-sm max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkBreaks]}
+                components={customComponents}
+              >
                 {message.text}
               </ReactMarkdown>
             </div>
