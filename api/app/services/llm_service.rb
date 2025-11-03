@@ -1,5 +1,3 @@
-# api/app/services/llm_service.rb
-
 require 'net/http'
 require 'json'
 

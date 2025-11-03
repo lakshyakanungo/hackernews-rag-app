@@ -1,5 +1,3 @@
-# api/app/services/vector_db_service.rb
-
 require 'httparty'
 
 class VectorDbService

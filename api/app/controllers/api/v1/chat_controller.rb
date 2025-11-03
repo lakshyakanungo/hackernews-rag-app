@@ -1,5 +1,3 @@
-# api/app/controllers/api/v1/chat_controller.rb
-
 class Api::V1::ChatController < ApplicationController
   include ActionController::Live
 

@@ -1,5 +1,3 @@
-# api/app/services/llm_service2.rb
-
 require 'gemini-ai'
 
 class LlmService2
