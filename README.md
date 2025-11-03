@@ -1,11 +1,11 @@
 ### HackerNews made smarter
 
-**Key features:**
+Get answers about the latest hackernews articles by just chatting!
 
-1) Get hackernews articles organised by categories - V2
-2) Filter the categories of articles you want to see - V2
-3) Find relevant articles via the chat interface
-4) Ask questions about an article or across articles directly using an AI chat interface
+Try these prompts - 
+1) Tell me about this article - How to inject knowledge efficiently? Knowledge infusion scaling law for LLMs
+2) Explain this article - Signal Protocol and Post-Quantum Ratchets
 
-**Future:**
-1) Get recommendation of articles and personalised feed based on your preference
+   Or just put in the article's title, like:
+3) Potential issues in curl found using AI assisted tools 
+
