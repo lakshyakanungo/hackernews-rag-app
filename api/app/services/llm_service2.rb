@@ -9,7 +9,7 @@ class LlmService2
         service: 'generative-language-api',
         api_key: ENV['GOOGLE_API_KEY']
       },
-      options: { model: 'gemini-2.5-flash', server_sent_events: true }
+      options: { model: 'gemini-3.5-flash', server_sent_events: true }
     )
   end
 
