@@ -10,6 +10,7 @@ class VectorDbService
 
   PINECONE_API_URL = ENV['PINECONE_API_URL']
   PINECONE_API_KEY = ENV['PINECONE_API_KEY']
+  TOP_K = 10
 
   def self.get_relevant_context(query)
     # 1. Convert the user's query into an embedding using local Ollama
@@ -23,16 +24,15 @@ class VectorDbService
     }
     body = {
       'vector' => query_embedding,
-      'topK' => 3, # Get the top 3 most relevant chunks
+      'topK' => TOP_K,
       'includeMetadata' => true
     }.to_json
 
     begin
       response = HTTParty.post("#{PINECONE_API_URL}/query", headers: headers, body: body)
       if response.success?
-        # Extract just the text from the metadata of each match
         matches = response.parsed_response['matches'] || []
-        matches.map { |match| match.dig('metadata', 'text') }.compact
+        matches.filter_map { |match| build_context_item(match) }
       else
         puts "Error querying Pinecone: #{response.body}"
         []
@@ -43,7 +43,47 @@ class VectorDbService
     end
   end
 
+  def self.source_links(context, max: 2)
+    sources = {}
+
+    context.each do |item|
+      url = item[:url].to_s
+      next if url.empty?
+
+      key = item[:story_id] || url
+      sources[key] ||= {
+        title: item[:title].to_s.empty? ? url : item[:title].to_s,
+        url: url
+      }
+    end
+
+    links = sources.values.first(max).map do |source|
+      "[#{escape_markdown_link_text(source[:title])}](<#{source[:url]}>)"
+    end
+
+    links.empty? ? "" : "Sources: #{links.join(', ')}"
+  end
+
   private
+
+  def self.build_context_item(match)
+    metadata = match['metadata'] || {}
+    text = metadata['text'].to_s
+    return nil if text.empty?
+
+    {
+      story_id: metadata['story_id'],
+      title: metadata['title'],
+      url: metadata['url'],
+      hn_url: metadata['hn_url'],
+      text: text,
+      score: match['score']
+    }
+  end
+
+  def self.escape_markdown_link_text(text)
+    text.to_s.gsub('[', '\\[').gsub(']', '\\]')
+  end
 
   def self.generate_embedding(text)
     headers = { 'Content-Type' => 'application/json' }

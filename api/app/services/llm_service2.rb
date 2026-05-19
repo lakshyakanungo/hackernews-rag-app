@@ -29,17 +29,13 @@ class LlmService2
       Answer the following question based *only* on the provided context.
       If the context does not contain the answer, say "I could not find an answer in the provided articles."
 
-      At the end of the answer, provide links to the most relevant articles from the context.
-      Format the links as markdown links.
-      For example:
-        Sources: [Article Title](https://example.com/article), [Another Article](https://example.com/another-article)
-      Do not provide any links that are not in the context.
-      Ensure the links are actual links listed in the hackernews article.
-      If you are unsure about the links, say "Unable to find the relevant links".
+      Do not include a Sources section or markdown source links in your answer.
+      The application will append verified article links after your answer.
+      If you mention an article, use the exact title shown in the context.
 
       Here is the relevant context from new articles:
       ---
-      #{context.join("\n---\n")}
+      #{format_context(context)}
       ---
 
       Here is the recent conversation history:
@@ -51,5 +47,21 @@ class LlmService2
 
       Answer:
     PROMPT
+  end
+
+  def self.format_context(context)
+    return "No relevant context found." if context.empty?
+
+    context.each_with_index.map do |item, index|
+      <<~CONTEXT
+        Source #{index + 1}
+        Title: #{item[:title]}
+        Article URL: #{item[:url]}
+        Hacker News URL: #{item[:hn_url]}
+        Relevance score: #{item[:score]}
+        Text:
+        #{item[:text]}
+      CONTEXT
+    end.join("\n---\n")
   end
 end

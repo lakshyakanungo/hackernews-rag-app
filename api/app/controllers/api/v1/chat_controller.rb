@@ -15,6 +15,7 @@ class Api::V1::ChatController < ApplicationController
 
     history = conversation.messages.order(created_at: :desc).limit(5).reverse
     context = VectorDbService.get_relevant_context(query)
+    source_links = VectorDbService.source_links(context)
 
     response.headers['Content-Type'] = 'text/event-stream'
     ai_response = ""
@@ -25,6 +26,12 @@ class Api::V1::ChatController < ApplicationController
         sanitized_chunk = chunk.gsub("\n", "[NL]")
         ai_response << chunk
         response.stream.write("data: #{sanitized_chunk}\n\n")
+      end
+
+      if source_links.present?
+        sources_chunk = "\n\n#{source_links}"
+        ai_response << sources_chunk
+        response.stream.write("data: #{sources_chunk.gsub("\n", "[NL]")}\n\n")
       end
 
       # Save the AI's full response
